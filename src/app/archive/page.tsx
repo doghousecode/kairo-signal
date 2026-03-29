@@ -36,6 +36,14 @@ export default async function ArchivePage() {
         <p style={{ color: "#999", fontSize: 14 }}>No briefings yet.</p>
       )}
 
+      <style>{`
+        .archive-item { padding: 18px 20px; border-radius: 10; border: 1px solid #f0f0f0; transition: background 0.15s; }
+        .archive-item:hover { background: #fafafa; }
+        @media (prefers-color-scheme: dark) {
+          .archive-item { border-color: #222; }
+          .archive-item:hover { background: #111; }
+        }
+      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {briefings?.map((b) => {
           const date = new Date(b.created_at);
@@ -52,20 +60,8 @@ export default async function ArchivePage() {
             .trim();
 
           return (
-            <Link
-              key={b.id}
-              href={`/archive/${b.id}`}
-              style={{ textDecoration: "none" }}
-            >
-              <div style={{
-                padding: "18px 20px",
-                borderRadius: 10,
-                border: "1px solid #f0f0f0",
-                transition: "background 0.15s",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-              >
+            <Link key={b.id} href={`/archive/${b.id}`} style={{ textDecoration: "none" }}>
+              <div className="archive-item">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{dateStr}</span>
                   <span style={{ fontSize: 12, color: "#bbb" }}>{timeStr}</span>
