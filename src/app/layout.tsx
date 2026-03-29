@@ -13,12 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kairo",
-  description: "Kairo",
+  title: "Kairo Signal",
+  description: "Your morning briefing.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Kairo",
+    title: "Kairo Signal",
   },
 };
 
