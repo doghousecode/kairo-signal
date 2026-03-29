@@ -63,7 +63,7 @@ export default function Home() {
               padding-left: 20px;
               margin: 0 0 12px;
             }
-            .briefing li { margin-bottom: 4px; }
+            .briefing li { margin-bottom: 6px; font-size: 15px; line-height: 1.75; }
             .briefing strong { font-weight: 700; color: #111; }
             .briefing a {
               color: #3A6EE8;
@@ -72,9 +72,10 @@ export default function Home() {
             .briefing a:hover { text-decoration: underline; }
             .briefing hr {
               border: none;
-              border-top: 1px solid #f0f0f0;
-              margin: 24px 0;
+              border-top: 2px solid #f0f0f0;
+              margin: 32px 0;
             }
+            .briefing p:empty { display: none; }
             .briefing blockquote {
               border-left: 3px solid #3A6EE8;
               margin: 0 0 12px;

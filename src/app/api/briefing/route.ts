@@ -158,7 +158,7 @@ function markdownToEmail(md: string, dateStr: string): string {
     .replace(/^# (.+)$/gm, '<h1 style="font-family:system-ui,sans-serif;font-size:24px;font-weight:800;color:#111;margin:0 0 16px;">$1</h1>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color:#3A6EE8;text-decoration:none;">$1</a>')
-    .replace(/^- (.+)$/gm, '<li style="margin-bottom:6px;">$1</li>')
+    .replace(/^- (.+)$/gm, '<li style="margin-bottom:6px;font-size:15px;line-height:1.75;color:#333;">$1</li>')
     .replace(/(<li.*<\/li>\n?)+/g, '<ul style="padding-left:20px;margin:0 0 14px;">$&</ul>')
     .replace(/\n\n/g, '</p><p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">')
     .replace(/^(?!<[hul])(.+)$/gm, '<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">$1</p>');
@@ -198,8 +198,80 @@ function markdownToEmail(md: string, dateStr: string): string {
 </html>`;
 }
 
+async function searchNews(query: string, days = 1): Promise<string> {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: process.env.TAVILY_API_KEY,
+      query,
+      search_depth: "basic",
+      max_results: 5,
+      days,
+    }),
+  });
+  const data = await res.json();
+  if (!data.results) return "";
+  return data.results
+    .map((r: { title: string; url: string; content: string }) =>
+      `- ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 200)}`
+    )
+    .join("\n");
+}
+
 export async function POST(request: Request) {
   const { interests } = await request.json();
+
+  const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const [breaking, aiTech, apple, arsenal, sports, music, fashion, automotive, tv, politics, teamAwareness] = await Promise.all([
+    searchNews("breaking news today UK world"),
+    searchNews("AI artificial intelligence tech news today"),
+    searchNews("Apple Inc news Tim Cook today"),
+    searchNews("Arsenal FC news tactics transfer"),
+    searchNews("F1 Formula 1 rugby Six Nations sports news today"),
+    searchNews("new music releases UK charts today"),
+    searchNews("streetwear drops Palace Supreme sneakers fashion today"),
+    searchNews("Porsche Audi Rivian Range Rover automotive news today"),
+    searchNews("new TV series streaming Netflix Apple TV BBC today"),
+    searchNews("UK politics US Trump news today"),
+    searchNews("cultural events religious holidays team global news today"),
+  ]);
+
+  const newsContext = `Today is ${today}. Here is today's live news context for each section — use this as your primary source material:
+
+## BREAKING NEWS
+${breaking}
+
+## AI & TECH
+${aiTech}
+
+## APPLE
+${apple}
+
+## ARSENAL & FOOTBALL
+${arsenal}
+
+## OTHER SPORTS
+${sports}
+
+## MUSIC
+${music}
+
+## FASHION & STREETWEAR
+${fashion}
+
+## AUTOMOTIVE
+${automotive}
+
+## TV & POP CULTURE
+${tv}
+
+## POLITICS
+${politics}
+
+## TEAM AWARENESS
+${teamAwareness}`;
 
   const message = await client.messages.create({
     model: "claude-opus-4-5",
@@ -208,7 +280,7 @@ export async function POST(request: Request) {
     messages: [
       {
         role: "user",
-        content: "morning briefing",
+        content: `morning briefing\n\n${newsContext}`,
       },
     ],
   });
