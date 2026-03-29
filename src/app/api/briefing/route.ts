@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
 const client = new Anthropic();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -116,6 +118,13 @@ export async function POST(request: Request) {
   });
 
   if (error) console.log("Supabase error:", error);
+
+  await resend.emails.send({
+    from: "Kairo Signal <signal@meetkairo.ai>",
+    to: "stephentinkler@mac.com",
+    subject: `☀️ Kairo Signal — ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}`,
+    text: text,
+  });
 
   return NextResponse.json({ briefing: text });
 }
