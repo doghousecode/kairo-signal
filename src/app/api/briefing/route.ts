@@ -226,11 +226,12 @@ export async function POST(request: Request) {
   const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-  const [breaking, aiTech, apple, arsenal, sports, music, fashion, automotive, tv, politics, teamAwareness] = await Promise.all([
+  const [breaking, aiTech, apple, arsenal, football, sports, music, fashion, automotive, tv, politics, teamAwareness] = await Promise.all([
     searchNews("breaking news today UK world"),
     searchNews("AI artificial intelligence tech news today"),
     searchNews("Apple Inc news Tim Cook today"),
-    searchNews("Arsenal FC news tactics transfer"),
+    searchNews("Arsenal FC news tactics transfer today"),
+    searchNews("Premier League news today Tottenham Spurs Chelsea Manchester City Liverpool"),
     searchNews(`sports news today ${monthYear} F1 formula 1`),
     searchNews("new music releases UK charts today"),
     searchNews("streetwear drops Palace Supreme sneakers fashion today"),
@@ -261,6 +262,9 @@ ${apple}
 
 ## ARSENAL & FOOTBALL
 ${arsenal}
+
+## PREMIER LEAGUE & FOOTBALL NEWS
+${football}
 
 ## OTHER SPORTS
 ${sports}
