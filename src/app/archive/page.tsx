@@ -26,7 +26,7 @@ export default async function ArchivePage() {
         <span style={{ color: "#1A2B4A" }}>RO</span>
         <span style={{ color: "#999", fontSize: 16, fontWeight: 400, marginLeft: 10 }}>Archive</span>
       </h1>
-      <p style={{ color: "#999", fontSize: 14, marginBottom: 40 }}>Every briefing, in order.</p>
+      <p style={{ color: "#999", fontSize: 14, marginBottom: 40, colorScheme: "light dark" }}>Every briefing, in order.</p>
 
       {error && (
         <p style={{ color: "#e55", fontSize: 14 }}>Error loading briefings.</p>
@@ -37,11 +37,17 @@ export default async function ArchivePage() {
       )}
 
       <style>{`
-        .archive-item { padding: 18px 20px; border-radius: 10; border: 1px solid #f0f0f0; transition: background 0.15s; }
+        .archive-item { padding: 18px 20px; border-radius: 10px; border: 1px solid #f0f0f0; transition: background 0.15s; }
         .archive-item:hover { background: #fafafa; }
+        .archive-date { font-weight: 700; font-size: 15px; color: #111; }
+        .archive-time { font-size: 12px; color: #bbb; }
+        .archive-preview { margin: 0; font-size: 13px; color: #888; line-height: 1.5; }
         @media (prefers-color-scheme: dark) {
           .archive-item { border-color: #222; }
           .archive-item:hover { background: #111; }
+          .archive-date { color: #f0f0f0; }
+          .archive-time { color: #555; }
+          .archive-preview { color: #666; }
         }
       `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -63,12 +69,10 @@ export default async function ArchivePage() {
             <Link key={b.id} href={`/archive/${b.id}`} style={{ textDecoration: "none" }}>
               <div className="archive-item">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                  <span style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{dateStr}</span>
-                  <span style={{ fontSize: 12, color: "#bbb" }}>{timeStr}</span>
+                  <span className="archive-date">{dateStr}</span>
+                  <span className="archive-time">{timeStr}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: 13, color: "#888", lineHeight: 1.5 }}>
-                  {preview}…
-                </p>
+                <p className="archive-preview">{preview}…</p>
               </div>
             </Link>
           );
