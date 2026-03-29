@@ -44,11 +44,12 @@ export default async function BriefingPage({ params }: { params: Promise<{ id: s
         {" "}Signal
       </p>
 
-      <div style={{ lineHeight: 1.75, fontSize: 15, color: "#1a1a1a" }}>
+      <div style={{ lineHeight: 1.75, fontSize: 15 }}>
         <style>{`
+          .briefing { color: #1a1a1a; }
           .briefing h1, .briefing h2, .briefing h3 {
             font-size: 17px; font-weight: 700; margin: 28px 0 8px;
-            color: #111; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px;
+            color: #111; border-bottom: 1px solid #e8e8e8; padding-bottom: 6px;
           }
           .briefing h1 { font-size: 20px; }
           .briefing p { margin: 0 0 12px; }
@@ -57,7 +58,13 @@ export default async function BriefingPage({ params }: { params: Promise<{ id: s
           .briefing strong { font-weight: 700; color: #111; }
           .briefing a { color: #3A6EE8; text-decoration: none; }
           .briefing a:hover { text-decoration: underline; }
-          .briefing hr { border: none; border-top: 1px solid #f0f0f0; margin: 24px 0; }
+          .briefing hr { border: none; border-top: 1px solid #e8e8e8; margin: 24px 0; }
+          @media (prefers-color-scheme: dark) {
+            .briefing { color: #e8e8e8; }
+            .briefing h1, .briefing h2, .briefing h3 { color: #f0f0f0; border-bottom-color: #333; }
+            .briefing strong { color: #fff; }
+            .briefing hr { border-top-color: #333; }
+          }
         `}</style>
         <div className="briefing">
           <ReactMarkdown>{briefing.content}</ReactMarkdown>

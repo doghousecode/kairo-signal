@@ -68,7 +68,13 @@ export default function Home() {
         <span style={{ color: "#4A7AFF" }}>AI</span>
         <span style={{ color: "#1A2B4A" }}>RO</span>
       </h1>
-      <p style={{ color: "#666", marginBottom: 32 }}>Your morning briefing.</p>
+      <p style={{ color: "var(--sub, #666)", marginBottom: 32 }}>Your morning briefing.</p>
+      <style>{`
+        :root { color-scheme: light dark; }
+        @media (prefers-color-scheme: dark) {
+          body { background: #0a0a0a; }
+        }
+      `}</style>
       <button
         onClick={generateBriefing}
         disabled={loading}
@@ -87,15 +93,15 @@ export default function Home() {
           marginTop: 40,
           lineHeight: 1.75,
           fontSize: 15,
-          color: "#1a1a1a",
         }}>
           <style>{`
+            .briefing { color: #1a1a1a; }
             .briefing h1, .briefing h2, .briefing h3 {
               font-size: 17px;
               font-weight: 700;
               margin: 28px 0 8px;
               color: #111;
-              border-bottom: 1px solid #f0f0f0;
+              border-bottom: 1px solid #e8e8e8;
               padding-bottom: 6px;
             }
             .briefing h1 { font-size: 20px; }
@@ -113,7 +119,7 @@ export default function Home() {
             .briefing a:hover { text-decoration: underline; }
             .briefing hr {
               border: none;
-              border-top: 2px solid #f0f0f0;
+              border-top: 2px solid #e8e8e8;
               margin: 32px 0;
             }
             .briefing p:empty { display: none; }
@@ -122,6 +128,14 @@ export default function Home() {
               margin: 0 0 12px;
               padding: 4px 0 4px 16px;
               color: #555;
+            }
+            @media (prefers-color-scheme: dark) {
+              .briefing { color: #e8e8e8; }
+              .briefing h1, .briefing h2, .briefing h3 { color: #f0f0f0; border-bottom-color: #333; }
+              .briefing strong { color: #fff; }
+              .briefing hr { border-top-color: #333; }
+              .briefing blockquote { color: #aaa; border-left-color: #4A7AFF; }
+            }
             }
           `}</style>
           <div className="briefing">
