@@ -222,23 +222,33 @@ async function searchNews(query: string, days = 1): Promise<string> {
 export async function POST(request: Request) {
   const { interests } = await request.json();
 
-  const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const now = new Date();
+  const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
   const [breaking, aiTech, apple, arsenal, sports, music, fashion, automotive, tv, politics, teamAwareness] = await Promise.all([
     searchNews("breaking news today UK world"),
     searchNews("AI artificial intelligence tech news today"),
     searchNews("Apple Inc news Tim Cook today"),
     searchNews("Arsenal FC news tactics transfer"),
-    searchNews("F1 Formula 1 rugby Six Nations sports news today"),
+    searchNews(`sports news today ${monthYear} F1 formula 1`),
     searchNews("new music releases UK charts today"),
     searchNews("streetwear drops Palace Supreme sneakers fashion today"),
     searchNews("Porsche Audi Rivian Range Rover automotive news today"),
     searchNews("new TV series streaming Netflix Apple TV BBC today"),
     searchNews("UK politics US Trump news today"),
-    searchNews("cultural events religious holidays team global news today"),
+    searchNews(`religious holidays cultural events ${monthYear} global`),
   ]);
 
-  const newsContext = `Today is ${today}. Here is today's live news context for each section — use this as your primary source material:
+  const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to verify the relevance of all events below.
+
+CRITICAL RULES:
+- Only include sports events, religious holidays, and cultural events that are confirmed CURRENT or UPCOMING based on the search results AND today's date above.
+- If a sporting tournament or event is not mentioned in the search results as happening NOW, do not include it.
+- If a religious holiday has already passed before ${today}, do not mention it as upcoming.
+- Do not rely on training data for current dates of recurring events (Six Nations, Ramadan, etc.) — verify against search results only.
+
+Here is today's live news — use this as your sole source for current events:
 
 ## BREAKING NEWS
 ${breaking}
