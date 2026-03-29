@@ -1,0 +1,83 @@
+import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export const revalidate = 0;
+
+export default async function ArchivePage() {
+  const { data: briefings, error } = await supabase
+    .from("briefings")
+    .select("id, created_at, content")
+    .order("created_at", { ascending: false });
+
+  return (
+    <main style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px", fontFamily: "system-ui" }}>
+      <Link href="/" style={{ color: "#999", fontSize: 13, textDecoration: "none" }}>
+        ← back
+      </Link>
+
+      <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", margin: "24px 0 4px" }}>
+        <span style={{ color: "#1A2B4A" }}>K</span>
+        <span style={{ color: "#4A7AFF" }}>AI</span>
+        <span style={{ color: "#1A2B4A" }}>RO</span>
+        <span style={{ color: "#999", fontSize: 16, fontWeight: 400, marginLeft: 10 }}>Archive</span>
+      </h1>
+      <p style={{ color: "#999", fontSize: 14, marginBottom: 40 }}>Every briefing, in order.</p>
+
+      {error && (
+        <p style={{ color: "#e55", fontSize: 14 }}>Error loading briefings.</p>
+      )}
+
+      {!briefings?.length && !error && (
+        <p style={{ color: "#999", fontSize: 14 }}>No briefings yet.</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {briefings?.map((b) => {
+          const date = new Date(b.created_at);
+          const dateStr = date.toLocaleDateString("en-GB", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric",
+          });
+          const timeStr = date.toLocaleTimeString("en-GB", {
+            hour: "2-digit", minute: "2-digit",
+          });
+          const preview = b.content
+            ?.replace(/#{1,3}\s/g, "")
+            .replace(/\*\*/g, "")
+            .slice(0, 120)
+            .trim();
+
+          return (
+            <Link
+              key={b.id}
+              href={`/archive/${b.id}`}
+              style={{ textDecoration: "none" }}
+            >
+              <div style={{
+                padding: "18px 20px",
+                borderRadius: 10,
+                border: "1px solid #f0f0f0",
+                transition: "background 0.15s",
+              }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                  <span style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{dateStr}</span>
+                  <span style={{ fontSize: 12, color: "#bbb" }}>{timeStr}</span>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: "#888", lineHeight: 1.5 }}>
+                  {preview}…
+                </p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </main>
+  );
+}

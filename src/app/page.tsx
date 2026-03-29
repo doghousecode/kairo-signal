@@ -232,6 +232,21 @@ export default function Home() {
         </div>
       )}
 
+      <a href="/archive" style={{
+        display: "inline-block",
+        padding: "10px 24px",
+        color: "#666",
+        borderRadius: 8,
+        fontWeight: 500,
+        textDecoration: "none",
+        fontSize: 14,
+        marginTop: 24,
+        border: "1px solid #e8e8e8",
+        marginRight: 12,
+      }}>
+        Archive
+      </a>
+
       <a href="/onboarding" style={{
         display: "inline-block",
         padding: "14px 36px",
