@@ -7,6 +7,21 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [wayback, setWayback] = useState<{ briefing: string; year: number } | null>(null);
   const [waybackLoading, setWaybackLoading] = useState(false);
+  const [waybackSending, setWaybackSending] = useState(false);
+  const [waybackSent, setWaybackSent] = useState(false);
+
+  const emailWayback = async () => {
+    if (!wayback) return;
+    setWaybackSending(true);
+    await fetch("/api/briefing/wayback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ briefing: wayback.briefing, year: wayback.year }),
+    });
+    setWaybackSending(false);
+    setWaybackSent(true);
+    setTimeout(() => setWaybackSent(false), 3000);
+  };
   const logoClickCount = useRef(0);
   const logoClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -187,16 +202,32 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setWayback(null)}
-              style={{
-                marginTop: 24, background: "transparent", border: "1px solid #c8a96e40",
-                color: "#c8a96e", padding: "12px 28px", borderRadius: 8,
-                fontSize: 14, cursor: "pointer", fontFamily: "system-ui", width: "100%",
-              }}
-            >
-              ← back to today
-            </button>
+            <div style={{ marginTop: 24, display: "flex", gap: 12 }}>
+              <button
+                onClick={emailWayback}
+                disabled={waybackSending || waybackSent}
+                style={{
+                  flex: 1, background: waybackSent ? "rgba(200,169,110,0.15)" : "transparent",
+                  border: "1px solid #c8a96e60", color: "#c8a96e",
+                  padding: "12px 28px", borderRadius: 8, fontSize: 14,
+                  cursor: waybackSending ? "not-allowed" : "pointer",
+                  fontFamily: "system-ui", opacity: waybackSending ? 0.6 : 1,
+                  transition: "all 0.3s",
+                }}
+              >
+                {waybackSent ? "✓ sent to your inbox" : waybackSending ? "sending..." : "📬 email me this"}
+              </button>
+              <button
+                onClick={() => { setWayback(null); setWaybackSent(false); }}
+                style={{
+                  flex: 1, background: "transparent", border: "1px solid #c8a96e20",
+                  color: "rgba(200,169,110,0.5)", padding: "12px 28px", borderRadius: 8,
+                  fontSize: 14, cursor: "pointer", fontFamily: "system-ui",
+                }}
+              >
+                ← back to today
+              </button>
+            </div>
           </div>
         </div>
       )}

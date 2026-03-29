@@ -1,5 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Resend } from "resend";
 import { NextResponse } from "next/server";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const maxDuration = 120;
 
@@ -72,4 +75,64 @@ IMPORTANT: Do not mention events that hadn't happened yet as of ${historicalDate
   const text = message.content[0].type === "text" ? message.content[0].text : "";
 
   return NextResponse.json({ briefing: text, year });
+}
+
+export async function POST(request: Request) {
+  const { briefing, year } = await request.json();
+
+  const dayMonth = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const historicalDate = `${dayMonth}, ${year}`;
+
+  const body = briefing
+    .replace(/^### (.+)$/gm, `<h2 style="font-family:system-ui,sans-serif;font-size:17px;font-weight:700;color:#c8a96e;margin:28px 0 8px;padding-bottom:8px;border-bottom:1px solid rgba(200,169,110,0.2);">$1</h2>`)
+    .replace(/^## (.+)$/gm, `<h2 style="font-family:system-ui,sans-serif;font-size:20px;font-weight:800;color:#c8a96e;margin:32px 0 10px;">$1</h2>`)
+    .replace(/^# (.+)$/gm, `<h1 style="font-family:system-ui,sans-serif;font-size:24px;font-weight:800;color:#c8a96e;margin:0 0 16px;">$1</h1>`)
+    .replace(/\*\*(.+?)\*\*/g, `<strong style="color:#e8d9b8;">$1</strong>`)
+    .replace(/\[(.+?)\]\((.+?)\)/g, `<a href="$2" style="color:#c8a96e;text-decoration:none;">$1</a>`)
+    .replace(/^- (.+)$/gm, `<li style="margin-bottom:6px;font-size:15px;line-height:1.75;color:#d4c4a0;">$1</li>`)
+    .replace(/(<li.*<\/li>\n?)+/g, `<ul style="padding-left:20px;margin:0 0 14px;">$&</ul>`)
+    .replace(/\n\n/g, `</p><p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#d4c4a0;margin:0 0 12px;">`)
+    .replace(/^(?!<[hul])(.+)$/gm, `<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#d4c4a0;margin:0 0 12px;">$1</p>`);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0f0b06;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0b06;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#1a1206;border-radius:16px;overflow:hidden;border:1px solid rgba(200,169,110,0.2);box-shadow:0 0 60px rgba(200,169,110,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#2a1f0a,#1a1206);padding:28px 40px;border-bottom:1px solid rgba(200,169,110,0.15);">
+            <div style="font-family:system-ui,sans-serif;font-size:11px;letter-spacing:0.25em;color:rgba(200,169,110,0.5);text-transform:uppercase;margin-bottom:10px;">📼 transmission from the archive</div>
+            <div style="font-family:system-ui,sans-serif;font-size:56px;font-weight:900;color:#c8a96e;letter-spacing:-0.03em;line-height:1;">${year}</div>
+            <div style="font-family:system-ui,sans-serif;font-size:13px;color:rgba(200,169,110,0.5);margin-top:6px;">${historicalDate}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 48px;">
+            ${body}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:rgba(200,169,110,0.04);padding:20px 40px;border-top:1px solid rgba(200,169,110,0.1);">
+            <p style="font-family:system-ui,sans-serif;font-size:12px;color:rgba(200,169,110,0.4);margin:0;">
+              Kairo Signal · Wayback Machine · <a href="https://kairo-signal.vercel.app" style="color:#c8a96e;text-decoration:none;">kairo-signal.vercel.app</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from: "Kairo Signal <signal@meetkairo.ai>",
+    to: "stephentinkler@mac.com",
+    subject: `📼 Kairo Wayback — ${historicalDate}`,
+    html,
+    text: briefing,
+  });
+
+  return NextResponse.json({ ok: true });
 }
