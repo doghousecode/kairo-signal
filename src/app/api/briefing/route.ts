@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 120;
+
 const client = new Anthropic();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
