@@ -205,8 +205,8 @@ async function searchNews(query: string, days = 1): Promise<string> {
     body: JSON.stringify({
       api_key: process.env.TAVILY_API_KEY,
       query,
-      search_depth: "basic",
-      max_results: 5,
+      search_depth: "advanced",
+      max_results: 8,
       days,
     }),
   });
@@ -214,7 +214,7 @@ async function searchNews(query: string, days = 1): Promise<string> {
   if (!data.results) return "";
   return data.results
     .map((r: { title: string; url: string; content: string }) =>
-      `- ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 200)}`
+      `- ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
     )
     .join("\n");
 }
@@ -226,20 +226,34 @@ export async function POST(request: Request) {
   const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-  const [breaking, aiTech, apple, arsenal, football, sports, music, fashion, automotive, tv, politics, teamAwareness] = await Promise.all([
+  const [breaking, aiTech, apple, arsenalNews, arsenalTable, football, f1, music, fashion, sneakers, automotive, tv, politics, teamAwareness] = await Promise.all([
     searchNews("breaking news today UK world"),
-    searchNews("AI artificial intelligence tech news today"),
-    searchNews("Apple Inc news Tim Cook today"),
-    searchNews("Arsenal FC news tactics transfer today"),
-    searchNews("Premier League news today Tottenham Spurs Chelsea Manchester City Liverpool"),
-    searchNews(`sports news today ${monthYear} F1 formula 1`),
-    searchNews("new music releases UK charts today"),
-    searchNews("streetwear drops Palace Supreme sneakers fashion today"),
-    searchNews("Porsche Audi Rivian Range Rover automotive news today"),
-    searchNews("new TV series streaming Netflix Apple TV BBC today"),
-    searchNews("UK politics US Trump news today"),
-    searchNews(`religious holidays cultural events ${monthYear} global`),
+    searchNews("AI machine learning new model release announcement today"),
+    searchNews("Apple Inc Tim Cook news announcement today"),
+    searchNews("Arsenal FC match tactics injury news today"),
+    searchNews(`Arsenal Premier League table standings ${monthYear}`),
+    searchNews("Premier League news today Tottenham Spurs sacking transfer signing"),
+    searchNews(`F1 Formula 1 race result ${monthYear} grand prix`),
+    searchNews("new music album single release UK charts today"),
+    searchNews("Palace Supreme Corteiz streetwear drop collab today"),
+    searchNews("sneaker release Jordan Nike Adidas today"),
+    searchNews("Porsche Rivian Range Rover electric vehicle news today"),
+    searchNews("new TV series Netflix Apple TV BBC streaming today"),
+    searchNews("UK politics Starmer Trump US news today"),
+    searchNews(`religious holiday cultural event ${monthYear}`),
   ]);
+
+  // Fetch yesterday's briefing for deduplication
+  const { data: lastBriefing } = await supabase
+    .from("briefings")
+    .select("content, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  const dedupContext = lastBriefing
+    ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development — if so, reference it briefly as "following yesterday's coverage of X, the latest is Y"):\n${lastBriefing.content.slice(0, 3000)}`
+    : "";
 
   const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to verify the relevance of all events below.
 
@@ -248,6 +262,7 @@ CRITICAL RULES:
 - If a sporting tournament or event is not mentioned in the search results as happening NOW, do not include it.
 - If a religious holiday has already passed before ${today}, do not mention it as upcoming.
 - Do not rely on training data for current dates of recurring events (Six Nations, Ramadan, etc.) — verify against search results only.
+${dedupContext}
 
 Here is today's live news — use this as your sole source for current events:
 
@@ -260,20 +275,26 @@ ${aiTech}
 ## APPLE
 ${apple}
 
-## ARSENAL & FOOTBALL
-${arsenal}
+## ARSENAL — MATCH & TACTICAL NEWS
+${arsenalNews}
+
+## ARSENAL — LEAGUE TABLE & STANDINGS
+${arsenalTable}
 
 ## PREMIER LEAGUE & FOOTBALL NEWS
 ${football}
 
-## OTHER SPORTS
-${sports}
+## F1 & OTHER SPORTS
+${f1}
 
 ## MUSIC
 ${music}
 
 ## FASHION & STREETWEAR
 ${fashion}
+
+## SNEAKERS
+${sneakers}
 
 ## AUTOMOTIVE
 ${automotive}
@@ -284,7 +305,7 @@ ${tv}
 ## POLITICS
 ${politics}
 
-## TEAM AWARENESS
+## TEAM AWARENESS / CULTURAL EVENTS
 ${teamAwareness}`;
 
   const message = await client.messages.create({
