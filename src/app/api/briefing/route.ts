@@ -187,7 +187,7 @@ function markdownToEmail(md: string, dateStr: string): string {
         <tr>
           <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #f0f0f0;">
             <p style="font-family:system-ui,sans-serif;font-size:12px;color:#999;margin:0;">
-              Your Kairo morning briefing · <a href="https://kairo-signal.vercel.app" style="color:#3A6EE8;text-decoration:none;">kairo-signal.vercel.app</a>
+              Your Kairo morning briefing · <a href="https://signal.meetkairo.ai" style="color:#3A6EE8;text-decoration:none;">signal.meetkairo.ai</a>
             </p>
           </td>
         </tr>

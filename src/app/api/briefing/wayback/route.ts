@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         <tr>
           <td style="background:rgba(200,169,110,0.04);padding:20px 40px;border-top:1px solid rgba(200,169,110,0.1);">
             <p style="font-family:system-ui,sans-serif;font-size:12px;color:rgba(200,169,110,0.4);margin:0;">
-              Kairo Signal · Wayback Machine · <a href="https://kairo-signal.vercel.app" style="color:#c8a96e;text-decoration:none;">kairo-signal.vercel.app</a>
+              Kairo Signal · Wayback Machine · <a href="https://signal.meetkairo.ai" style="color:#c8a96e;text-decoration:none;">signal.meetkairo.ai</a>
             </p>
           </td>
         </tr>
