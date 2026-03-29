@@ -94,6 +94,53 @@ Only if genuinely major news is dominating the cycle.
 ### 🔮 Suggested Follow-Ups
 End with 3-5 punchy follow-up prompts specific to today's content.`;
 
+function markdownToEmail(md: string, dateStr: string): string {
+  const body = md
+    .replace(/^### (.+)$/gm, '<h2 style="font-family:system-ui,sans-serif;font-size:17px;font-weight:700;color:#111;margin:28px 0 8px;padding-bottom:8px;border-bottom:2px solid #f0f0f0;">$1</h2>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-family:system-ui,sans-serif;font-size:20px;font-weight:800;color:#111;margin:32px 0 10px;">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="font-family:system-ui,sans-serif;font-size:24px;font-weight:800;color:#111;margin:0 0 16px;">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color:#3A6EE8;text-decoration:none;">$1</a>')
+    .replace(/^- (.+)$/gm, '<li style="margin-bottom:6px;">$1</li>')
+    .replace(/(<li.*<\/li>\n?)+/g, '<ul style="padding-left:20px;margin:0 0 14px;">$&</ul>')
+    .replace(/\n\n/g, '</p><p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">')
+    .replace(/^(?!<[hul])(.+)$/gm, '<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">$1</p>');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1A2B4A 0%,#2d4a8a 100%);padding:28px 40px;">
+            <div style="font-family:system-ui,sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.03em;">
+              <span style="color:#fff;">K</span><span style="color:#4A7AFF;">AI</span><span style="color:#fff;">RO</span>
+              <span style="color:rgba(255,255,255,0.4);font-size:14px;font-weight:400;margin-left:12px;">Signal</span>
+            </div>
+            <div style="color:rgba(255,255,255,0.55);font-family:system-ui,sans-serif;font-size:13px;margin-top:4px;">${dateStr}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 48px;">
+            ${body}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #f0f0f0;">
+            <p style="font-family:system-ui,sans-serif;font-size:12px;color:#999;margin:0;">
+              Your Kairo morning briefing · <a href="https://kairo-signal.vercel.app" style="color:#3A6EE8;text-decoration:none;">kairo-signal.vercel.app</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function POST(request: Request) {
   const { interests } = await request.json();
 
@@ -121,11 +168,15 @@ export async function POST(request: Request) {
 
   if (error) console.log("Supabase error:", error);
 
+  const dateStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const html = markdownToEmail(text, dateStr);
+
   await resend.emails.send({
     from: "Kairo Signal <signal@meetkairo.ai>",
     to: "stephentinkler@mac.com",
-    subject: `☀️ Kairo Signal — ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}`,
-    text: text,
+    subject: `☀️ Kairo Signal — ${dateStr}`,
+    html,
+    text,
   });
 
   return NextResponse.json({ briefing: text });

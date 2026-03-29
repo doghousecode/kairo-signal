@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function Home() {
   const [briefing, setBriefing] = useState("");
@@ -39,25 +40,68 @@ export default function Home() {
       >
         {loading ? "Generating..." : "Generate Briefing"}
       </button>
+
       {briefing && (
-        <div style={{ marginTop: 40, whiteSpace: "pre-wrap", lineHeight: 1.7, fontSize: 15 }}>
-          {briefing}
+        <div style={{
+          marginTop: 40,
+          lineHeight: 1.75,
+          fontSize: 15,
+          color: "#1a1a1a",
+        }}>
+          <style>{`
+            .briefing h1, .briefing h2, .briefing h3 {
+              font-size: 17px;
+              font-weight: 700;
+              margin: 28px 0 8px;
+              color: #111;
+              border-bottom: 1px solid #f0f0f0;
+              padding-bottom: 6px;
+            }
+            .briefing h1 { font-size: 20px; }
+            .briefing p { margin: 0 0 12px; }
+            .briefing ul, .briefing ol {
+              padding-left: 20px;
+              margin: 0 0 12px;
+            }
+            .briefing li { margin-bottom: 4px; }
+            .briefing strong { font-weight: 700; color: #111; }
+            .briefing a {
+              color: #3A6EE8;
+              text-decoration: none;
+            }
+            .briefing a:hover { text-decoration: underline; }
+            .briefing hr {
+              border: none;
+              border-top: 1px solid #f0f0f0;
+              margin: 24px 0;
+            }
+            .briefing blockquote {
+              border-left: 3px solid #3A6EE8;
+              margin: 0 0 12px;
+              padding: 4px 0 4px 16px;
+              color: #555;
+            }
+          `}</style>
+          <div className="briefing">
+            <ReactMarkdown>{briefing}</ReactMarkdown>
+          </div>
         </div>
       )}
-<a href="/onboarding" style={{
-  display: "inline-block",
-  padding: "14px 36px",
-  background: "linear-gradient(135deg, #4F8EF7 0%, #6366F1 100%)",
-  color: "#fff",
-  borderRadius: 16,
-  fontWeight: 600,
-  textDecoration: "none",
-  fontSize: 14,
-  marginTop: 16,
-  boxShadow: "0 4px 24px rgba(79,142,247,0.3)",
-}}>
-  Start Onboarding
-</a>
+
+      <a href="/onboarding" style={{
+        display: "inline-block",
+        padding: "14px 36px",
+        background: "linear-gradient(135deg, #4F8EF7 0%, #6366F1 100%)",
+        color: "#fff",
+        borderRadius: 16,
+        fontWeight: 600,
+        textDecoration: "none",
+        fontSize: 14,
+        marginTop: 32,
+        boxShadow: "0 4px 24px rgba(79,142,247,0.3)",
+      }}>
+        Start Onboarding
+      </a>
     </main>
   );
 }
