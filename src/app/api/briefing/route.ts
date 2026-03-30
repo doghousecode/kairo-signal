@@ -198,8 +198,8 @@ async function searchNews(query: string, days = 1): Promise<string> {
     body: JSON.stringify({
       api_key: process.env.TAVILY_API_KEY,
       query,
-      search_depth: "advanced",
-      max_results: 8,
+      search_depth: "basic",
+      max_results: 5,
       days,
     }),
   });
@@ -207,7 +207,7 @@ async function searchNews(query: string, days = 1): Promise<string> {
   if (!data.results) return "";
   return data.results
     .map((r: { title: string; url: string; content: string; published_date?: string }) =>
-      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
+      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 300)}`
     )
     .join("\n");
 }
@@ -220,11 +220,12 @@ export async function POST(request: Request) {
   const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const year = now.getFullYear();
 
+  // Run all fetches in parallel — Tavily searches + Supabase queries together
   const [
     breaking, aiTech, apple, arsenalNews, arsenalTable, football,
     f1News, music, fashion, sneakers, automotive, tv, politics,
-    // Structured fact searches — targeted queries for data that changes every year
     eidDate, f1Standings, plTable,
+    lastBriefingResult, settingsResult,
   ] = await Promise.all([
     searchNews("breaking news today UK world", 1),
     searchNews("AI machine learning new model release announcement", 2),
@@ -239,30 +240,20 @@ export async function POST(request: Request) {
     searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
     searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
     searchNews("UK politics Starmer Trump US news today", 1),
-    // Structured facts
     searchNews(`Eid al-Fitr exact date ${year}`, 60),
     searchNews(`F1 Formula 1 ${year} drivers championship standings points`, 14),
     searchNews(`Premier League table standings top four ${monthYear}`, 7),
+    supabase.from("briefings").select("content, created_at").order("created_at", { ascending: false }).limit(1).single(),
+    supabase.from("settings").select("value").eq("key", "system_prompt").single(),
   ]);
 
-  // Fetch last briefing for deduplication
-  const { data: lastBriefing } = await supabase
-    .from("briefings")
-    .select("content, created_at")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+  const lastBriefing = (lastBriefingResult as { data: { content: string; created_at: string } | null }).data;
+  const settingsRow = (settingsResult as { data: { value: string } | null }).data;
 
   const dedupContext = lastBriefing
     ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development):\n${lastBriefing.content.slice(0, 3000)}`
     : "";
 
-  // Use custom system prompt if saved via /tune, otherwise use default
-  const { data: settingsRow } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "system_prompt")
-    .single();
   const activeSystemPrompt = settingsRow?.value || SYSTEM_PROMPT;
 
   const newsContext = `TODAY'S DATE: ${today}.
