@@ -15,13 +15,6 @@ const supabase = createClient(
 
 const SYSTEM_PROMPT = `You are Steve's personal morning briefing assistant. Deliver a 10-15 minute read covering the sections below. Always include source links and end with 3-5 specific follow-up prompts.
 
-You have access to a web_search tool. Use it proactively throughout this briefing:
-- Search for current news for every section before writing it
-- For structured facts (dates, standings, schedules, results), always search rather than relying on training data — your training data will have wrong years and stale schedules
-- Make specific, targeted queries: "Eid al-Fitr 2026 exact date", "Premier League table 30 March 2026", "F1 standings after [latest race] 2026"
-- If the first search isn't specific enough, try again with a better query
-- Always prefer what you find via search over training knowledge
-
 DEDUPLICATION: Do not repeat stories already covered in recent briefings unless there's a meaningful update. If a story was covered recently but has developed, reference it briefly ("covered yesterday — the latest is Y"). Prioritise freshness.
 
 ## About Steve
@@ -78,7 +71,7 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 - Other PL: only what affects Arsenal's season or genuinely big stories
 
 ### 🏎️ Other Sports
-- F1: Race weekends, driver moves, regulation changes, team drama. Search for the current standings and most recent race result — never state race dates unless you find them confirmed via search.
+- F1: Use the VERIFIED FACTS section for current standings and recent race result. Never state upcoming race dates unless explicitly confirmed in search results.
 - Rugby: International only (Six Nations, World Cup etc). Enough to chat with mates/Rocco
 - Tennis, padel, snooker, darts: Only notable events (Grand Slams, World Championships, viral moments)
 - Any crossover cultural sports moment
@@ -88,10 +81,10 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 - UK chart/streaming highlights, gig announcements (London/SE)
 - For Arlo (12): Rap releases, TikTok-trending artists, streetwear-music crossover — keep natural, not forced
 - For Rocco (14): Football culture music, mainstream trending
-- Cool Dad zone: Keep Steve current without crossing into try-hard territory. Knowing about it > pretending to be into it.
+- Cool Dad zone: Keep Steve current without crossing into try-hard territory.
 
 ### 👟 Fashion, Streetwear & Culture
-- RECENCY IS CRITICAL: Only cover drops, collabs, and releases from the past 7 days. Search to verify before including.
+- RECENCY IS CRITICAL: Only cover drops, collabs, and releases confirmed within the past 7 days based on article dates. An old collab is not news.
 - Major drops, collabs, restocks: Palace, Supreme, Kith, Corteiz, ALD, Fear of God + others
 - Trend shifts, London/UK scene focus
 - Notable sneaker releases
@@ -108,35 +101,29 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 
 ### 📺 TV & Pop Culture
 TV (go deeper):
-- RECENCY: Only cover announcements, premieres, and renewals from the past 7 days.
+- RECENCY: Only cover announcements, premieres, renewals, and deals confirmed in the past 7 days.
 - New series dropping or trending (taste: Hijack, Succession, Top Boy, prestige thriller/drama)
 - Streaming highlights: Apple TV+, Netflix, BBC
-- Podcast intel from Richard Osman's "That's Entertainment" or similar
 
 Film (light touch):
 - Oscars/BAFTAs: who's nominated, what films are about, lead actors. NOT detailed reviews.
 
 Pop culture:
 - Viral moments, award show highlights, memes if relevant
-- Whatever the internet is collectively losing its mind about
 
 ### 🌍 Politics — "Don't Let Me Look Stupid"
-Steve doesn't deep-dive politics. Goal: hold his own in a work conversation or dinner party.
 - UK: Government headlines, opposition moves, policy changes affecting real life.
 - US: Trump admin moves (especially tech/AI/Apple-relevant policy). Front-page-level only.
 - International: Only the biggest stories. Enough context to understand WHY it matters.
-- Politically neutral. Facts not hot takes. Explain acronyms and context.
+- Politically neutral. Facts not hot takes.
 
 ### 👥 Team Awareness
 Steve manages a diverse global team and wants to show up informed and caring.
-Cultural/religious events: Search for exact dates for the current year — never use training data for religious holiday dates. Give ~2 weeks advance notice for major ones (Ramadan, Eid, Diwali, CNY/LNY, Hanukkah, Easter, Nowruz etc), remind that week and on the day. Do NOT do daily countdowns.
+Use the VERIFIED FACTS section for exact dates of upcoming religious/cultural events — do NOT use training data for these dates, they change every year.
+Give ~2 weeks advance notice for major ones (Eid, Diwali, CNY/LNY, Hanukkah, Easter, Nowruz etc), remind that week and on the day. Do NOT do daily countdowns.
 
-Also flag:
-- Natural disasters, severe weather, emergencies in team locations
-- Political unrest or security concerns in team locations
-- Local holidays affecting availability
-
-Check-in suggestions must be triggered by a specific, recent event. Do not suggest a check-in as a standing courtesy.
+Also flag: natural disasters, severe weather, emergencies, political unrest, local holidays in team locations.
+Check-in suggestions must be triggered by a specific, recent event only.
 
 Team structure:
 - 🇬🇧 Direct reports in London — with ties to: 🇮🇹 Italy, 🇪🇸 Spain, 🇩🇪 Germany, 🇦🇪 Dubai, 🇺🇸 USA
@@ -204,11 +191,59 @@ function markdownToEmail(md: string, dateStr: string): string {
 </html>`;
 }
 
+async function searchNews(query: string, days = 1): Promise<string> {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: process.env.TAVILY_API_KEY,
+      query,
+      search_depth: "advanced",
+      max_results: 8,
+      days,
+    }),
+  });
+  const data = await res.json();
+  if (!data.results) return "";
+  return data.results
+    .map((r: { title: string; url: string; content: string; published_date?: string }) =>
+      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
+    )
+    .join("\n");
+}
+
 export async function POST(request: Request) {
   const { interests } = await request.json();
 
   const now = new Date();
   const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const year = now.getFullYear();
+
+  const [
+    breaking, aiTech, apple, arsenalNews, arsenalTable, football,
+    f1News, music, fashion, sneakers, automotive, tv, politics,
+    // Structured fact searches — targeted queries for data that changes every year
+    eidDate, f1Standings, plTable,
+  ] = await Promise.all([
+    searchNews("breaking news today UK world", 1),
+    searchNews("AI machine learning new model release announcement", 2),
+    searchNews("Apple Inc Tim Cook news announcement", 2),
+    searchNews("Arsenal FC match tactics injury transfer news", 2),
+    searchNews(`Arsenal Premier League table standings ${monthYear}`, 7),
+    searchNews("Premier League news Tottenham Spurs manager transfer signing this week", 3),
+    searchNews(`F1 Formula 1 race result ${monthYear} grand prix`, 7),
+    searchNews("new music album single release UK charts", 3),
+    searchNews("Palace Supreme Corteiz streetwear new drop collab release", 3),
+    searchNews("sneaker release Jordan Nike Adidas new drop", 3),
+    searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
+    searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
+    searchNews("UK politics Starmer Trump US news today", 1),
+    // Structured facts
+    searchNews(`Eid al-Fitr exact date ${year}`, 60),
+    searchNews(`F1 Formula 1 ${year} drivers championship standings points`, 14),
+    searchNews(`Premier League table standings top four ${monthYear}`, 7),
+  ]);
 
   // Fetch last briefing for deduplication
   const { data: lastBriefing } = await supabase
@@ -230,26 +265,84 @@ export async function POST(request: Request) {
     .single();
   const activeSystemPrompt = settingsRow?.value || SYSTEM_PROMPT;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const message = await (client.messages.create as any)({
+  const newsContext = `TODAY'S DATE: ${today}.
+
+⚠️ VERIFIED FACTS — use these for structured data. These were searched with targeted queries and should be trusted over news articles for dates and standings:
+
+## RELIGIOUS & CULTURAL DATES (current year only)
+${eidDate || "No results — do not guess dates from training data."}
+
+## F1 CHAMPIONSHIP STANDINGS (current)
+${f1Standings || "No results — do not state standings from training data."}
+
+## PREMIER LEAGUE TABLE (current)
+${plTable || "No results — do not state table positions from training data."}
+
+---
+
+CRITICAL RULES for the news sections below:
+- Every article includes its [published: date]. If older than 7 days, treat as background only — do not present as current news.
+- Fashion/TV/music: only cover content confirmed within the past 7 days.
+- TIMELINES: only include facts explicitly in the search results. Do not fill gaps from training knowledge.
+- NEVER use markdown table syntax — use numbered lists or prose instead.
+- NEVER state upcoming race dates or fixture dates unless explicitly quoted in search results.
+- If VERIFIED FACTS above are empty for something, say nothing rather than guessing.
+${dedupContext}
+
+---
+
+## BREAKING NEWS
+${breaking}
+
+## AI & TECH
+${aiTech}
+
+## APPLE
+${apple}
+
+## ARSENAL — MATCH & TACTICAL NEWS
+${arsenalNews}
+
+## ARSENAL — LEAGUE TABLE & STANDINGS
+${arsenalTable}
+
+## PREMIER LEAGUE & FOOTBALL NEWS
+${football}
+
+## F1 NEWS
+${f1News}
+
+## MUSIC
+${music}
+
+## FASHION & STREETWEAR
+${fashion}
+
+## SNEAKERS
+${sneakers}
+
+## AUTOMOTIVE
+${automotive}
+
+## TV & POP CULTURE
+${tv}
+
+## POLITICS
+${politics}`;
+
+  const message = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
     system: activeSystemPrompt,
-    tools: [{ type: "web_search_20250305", name: "web_search" }],
     messages: [
       {
         role: "user",
-        content: `Please generate my morning briefing. Today is ${today}.${dedupContext}`,
+        content: `morning briefing\n\n${newsContext}`,
       },
     ],
   });
 
-  // Extract all text blocks (web search responses interleave tool_use blocks)
-  const text = (message.content as Array<{ type: string; text?: string }>)
-    .filter(b => b.type === "text")
-    .map(b => b.text ?? "")
-    .join("\n\n")
-    .trim();
+  const text = message.content[0].type === "text" ? message.content[0].text : "";
 
   const tokensIn = message.usage?.input_tokens ?? 0;
   const tokensOut = message.usage?.output_tokens ?? 0;
