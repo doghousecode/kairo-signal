@@ -15,6 +15,13 @@ const supabase = createClient(
 
 const SYSTEM_PROMPT = `You are Steve's personal morning briefing assistant. Deliver a 10-15 minute read covering the sections below. Always include source links and end with 3-5 specific follow-up prompts.
 
+You have access to a web_search tool. Use it proactively throughout this briefing:
+- Search for current news for every section before writing it
+- For structured facts (dates, standings, schedules, results), always search rather than relying on training data — your training data will have wrong years and stale schedules
+- Make specific, targeted queries: "Eid al-Fitr 2026 exact date", "Premier League table 30 March 2026", "F1 standings after [latest race] 2026"
+- If the first search isn't specific enough, try again with a better query
+- Always prefer what you find via search over training knowledge
+
 DEDUPLICATION: Do not repeat stories already covered in recent briefings unless there's a meaningful update. If a story was covered recently but has developed, reference it briefly ("covered yesterday — the latest is Y"). Prioritise freshness.
 
 ## About Steve
@@ -71,7 +78,7 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 - Other PL: only what affects Arsenal's season or genuinely big stories
 
 ### 🏎️ Other Sports
-- F1: Race weekends, driver moves, regulation changes, team drama
+- F1: Race weekends, driver moves, regulation changes, team drama. Search for the current standings and most recent race result — never state race dates unless you find them confirmed via search.
 - Rugby: International only (Six Nations, World Cup etc). Enough to chat with mates/Rocco
 - Tennis, padel, snooker, darts: Only notable events (Grand Slams, World Championships, viral moments)
 - Any crossover cultural sports moment
@@ -84,12 +91,12 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 - Cool Dad zone: Keep Steve current without crossing into try-hard territory. Knowing about it > pretending to be into it.
 
 ### 👟 Fashion, Streetwear & Culture
-- RECENCY IS CRITICAL: Only cover drops, collabs, and releases confirmed within the past 7 days. A collab from months or years ago is not news — skip it entirely, even if the search result mentions it.
+- RECENCY IS CRITICAL: Only cover drops, collabs, and releases from the past 7 days. Search to verify before including.
 - Major drops, collabs, restocks: Palace, Supreme, Kith, Corteiz, ALD, Fear of God + others
 - Trend shifts, London/UK scene focus
 - Notable sneaker releases
-- Source priority: Highsnobiety, Hypebeast, END. Clothing, Sneaker News, brand official channels. Don't rely solely on general news — check streetwear-specific sources.
-- Skate culture crossover: Steve is deep into 80s skate — Natas Kaupas (all-time fave), Hosoi, Bones Brigade, Santa Cruz, Powell & Peralta, Z-Boys, Jim Phillips art, Mambo. Owns ~100 vintage 80s decks. Don't force daily — weave in when relevant (collabs, docs, anniversaries, art).
+- Source priority: Highsnobiety, Hypebeast, END. Clothing, Sneaker News, brand official channels.
+- Skate culture crossover: Steve is deep into 80s skate — Natas Kaupas (all-time fave), Hosoi, Bones Brigade, Santa Cruz, Powell & Peralta, Z-Boys, Jim Phillips art, Mambo. Owns ~100 vintage 80s decks. Don't force daily — weave in when relevant.
 - Watches: Rolex GMT, IWC Big Pilot Woodland, Omega Planet Ocean + Speedmaster Moonwatch, Breitling Navitimer, Bell & Ross Bellytanker. Flag notable releases/news occasionally.
 - For Arlo: TikTok fashion trends, school-age streetwear
 
@@ -101,13 +108,13 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 
 ### 📺 TV & Pop Culture
 TV (go deeper):
-- RECENCY: Only cover announcements, premieres, renewals, and deals confirmed in the past 7 days. A deal announced months ago is stale — skip it.
+- RECENCY: Only cover announcements, premieres, and renewals from the past 7 days.
 - New series dropping or trending (taste: Hijack, Succession, Top Boy, prestige thriller/drama)
 - Streaming highlights: Apple TV+, Netflix, BBC
-- Podcast intel from Richard Osman's "That's Entertainment" or similar — Steve doesn't listen to podcasts but likes the anecdotal industry insights
+- Podcast intel from Richard Osman's "That's Entertainment" or similar
 
 Film (light touch):
-- Oscars/BAFTAs: who's nominated, what films are about, lead actors. Enough to not feel clueless. NOT detailed reviews.
+- Oscars/BAFTAs: who's nominated, what films are about, lead actors. NOT detailed reviews.
 
 Pop culture:
 - Viral moments, award show highlights, memes if relevant
@@ -115,23 +122,21 @@ Pop culture:
 
 ### 🌍 Politics — "Don't Let Me Look Stupid"
 Steve doesn't deep-dive politics. Goal: hold his own in a work conversation or dinner party.
-Cover all geopolitics in this section only. Do not surface political context in other sections unless directly sector-specific (e.g. US tech regulation belongs in AI & Tech).
-- UK: Government headlines, opposition moves, policy changes affecting real life. Explain gently — assume smart person who hasn't been following closely.
+- UK: Government headlines, opposition moves, policy changes affecting real life.
 - US: Trump admin moves (especially tech/AI/Apple-relevant policy). Front-page-level only.
 - International: Only the biggest stories. Enough context to understand WHY it matters.
-- Politically neutral. Facts not hot takes. Explain acronyms and context. "Intelligent friend explains the news."
+- Politically neutral. Facts not hot takes. Explain acronyms and context.
 
 ### 👥 Team Awareness
 Steve manages a diverse global team and wants to show up informed and caring.
-Cultural/religious events: Give ~2 weeks advance notice for major ones (Ramadan, Eid, Diwali, CNY/LNY, Hanukkah, Easter, Nowruz etc), remind that week and on the day. Do NOT do daily countdowns.
+Cultural/religious events: Search for exact dates for the current year — never use training data for religious holiday dates. Give ~2 weeks advance notice for major ones (Ramadan, Eid, Diwali, CNY/LNY, Hanukkah, Easter, Nowruz etc), remind that week and on the day. Do NOT do daily countdowns.
 
 Also flag:
 - Natural disasters, severe weather, emergencies in team locations
 - Political unrest or security concerns in team locations
 - Local holidays affecting availability
-- Major news that might personally affect team members
 
-Check-in suggestions must be triggered by a specific, recent event. Do not suggest a check-in as a standing courtesy. If there's nothing actionable, say nothing.
+Check-in suggestions must be triggered by a specific, recent event. Do not suggest a check-in as a standing courtesy.
 
 Team structure:
 - 🇬🇧 Direct reports in London — with ties to: 🇮🇹 Italy, 🇪🇸 Spain, 🇩🇪 Germany, 🇦🇪 Dubai, 🇺🇸 USA
@@ -140,10 +145,8 @@ Team structure:
 - 🇸🇬 Regular collaboration: Singapore
 - 🇯🇵🇨🇳 Occasional collaboration: Tokyo, Shanghai
 
-Format: Brief, actionable. "Today is [event] — consider [action]" or "[Incident] in [location] — [context]."
-
 ### 🔮 Suggested Follow-Ups
-End with 3-5 punchy follow-up prompts specific to today's content. Keep labels short and actionable — e.g. "Deep dive: [topic]", "Arsenal v [opponent] tactical preview", "Draft a Slack message to my team about [event]".
+End with 3-5 punchy follow-up prompts specific to today's content.
 
 ## What NOT to include
 - Basic Arsenal scores/results
@@ -201,52 +204,13 @@ function markdownToEmail(md: string, dateStr: string): string {
 </html>`;
 }
 
-async function searchNews(query: string, days = 1): Promise<string> {
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query,
-      search_depth: "advanced",
-      max_results: 8,
-      days,
-    }),
-  });
-  const data = await res.json();
-  if (!data.results) return "";
-  return data.results
-    .map((r: { title: string; url: string; content: string; published_date?: string }) =>
-      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
-    )
-    .join("\n");
-}
-
 export async function POST(request: Request) {
   const { interests } = await request.json();
 
   const now = new Date();
   const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
-  const [breaking, aiTech, apple, arsenalNews, arsenalTable, football, f1, music, fashion, sneakers, automotive, tv, politics, teamAwareness] = await Promise.all([
-    searchNews("breaking news today UK world", 1),
-    searchNews("AI machine learning new model release announcement", 2),
-    searchNews("Apple Inc Tim Cook news announcement", 2),
-    searchNews("Arsenal FC match tactics injury transfer news", 2),
-    searchNews(`Arsenal Premier League table standings ${monthYear}`, 7),
-    searchNews("Premier League news Tottenham Spurs manager transfer signing this week", 3),
-    searchNews(`F1 Formula 1 race result ${monthYear} grand prix standings`, 7),
-    searchNews("new music album single release UK charts", 3),
-    searchNews("Palace Supreme Corteiz streetwear new drop collab release", 3),
-    searchNews("sneaker release Jordan Nike Adidas new drop", 3),
-    searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
-    searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
-    searchNews("UK politics Starmer Trump US news today", 1),
-    searchNews(`religious holiday cultural awareness event ${monthYear}`, 14),
-  ]);
-
-  // Fetch yesterday's briefing for deduplication
+  // Fetch last briefing for deduplication
   const { data: lastBriefing } = await supabase
     .from("briefings")
     .select("content, created_at")
@@ -255,67 +219,10 @@ export async function POST(request: Request) {
     .single();
 
   const dedupContext = lastBriefing
-    ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development — if so, reference it briefly as "following yesterday's coverage of X, the latest is Y"):\n${lastBriefing.content.slice(0, 3000)}`
+    ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development):\n${lastBriefing.content.slice(0, 3000)}`
     : "";
 
-  const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to judge the freshness of every article below.
-
-CRITICAL RULES:
-- Every article below includes its publication date in [published: ...] brackets. Read these dates carefully.
-- If an article's published date is more than 7 days before ${today}, treat it as background only — do NOT present it as news. If you cannot confirm a story is from this week, skip it.
-- If a sporting tournament, collab, deal, or announcement is only referenced in articles older than 7 days, do not cover it as current news. It is old news.
-- Do not rely on training data for ANY current facts, standings, schedules, or events — only use what's in the search results below, verified against the published dates.
-- TIMELINES: When describing a sequence of events (e.g. manager changes), only include facts explicitly stated in the search results. Do not fill gaps from training knowledge — if a step in the timeline isn't in the results, omit it rather than invent it.
-- TABLES: Never use markdown table syntax (| col | col |). Format standings and data as a numbered list or prose instead — tables do not render well.
-- SPORTS SCHEDULES: Never state upcoming fixture or race dates unless they are explicitly quoted in the search results.
-- RELIGIOUS/CULTURAL: Only flag events that haven't happened yet relative to ${today}. If it's passed, skip it.
-${dedupContext}
-
-Here is today's live news — use this as your sole source for current events:
-
-## BREAKING NEWS
-${breaking}
-
-## AI & TECH
-${aiTech}
-
-## APPLE
-${apple}
-
-## ARSENAL — MATCH & TACTICAL NEWS
-${arsenalNews}
-
-## ARSENAL — LEAGUE TABLE & STANDINGS
-${arsenalTable}
-
-## PREMIER LEAGUE & FOOTBALL NEWS
-${football}
-
-## F1 & OTHER SPORTS
-${f1}
-
-## MUSIC
-${music}
-
-## FASHION & STREETWEAR
-${fashion}
-
-## SNEAKERS
-${sneakers}
-
-## AUTOMOTIVE
-${automotive}
-
-## TV & POP CULTURE
-${tv}
-
-## POLITICS
-${politics}
-
-## TEAM AWARENESS / CULTURAL EVENTS
-${teamAwareness}`;
-
-  // Use custom system prompt if one has been saved via /tune, otherwise fall back to default
+  // Use custom system prompt if saved via /tune, otherwise use default
   const { data: settingsRow } = await supabase
     .from("settings")
     .select("value")
@@ -323,20 +230,26 @@ ${teamAwareness}`;
     .single();
   const activeSystemPrompt = settingsRow?.value || SYSTEM_PROMPT;
 
-  const message = await client.messages.create({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const message = await (client.messages.create as any)({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
     system: activeSystemPrompt,
+    tools: [{ type: "web_search_20250305", name: "web_search" }],
     messages: [
       {
         role: "user",
-        content: `morning briefing\n\n${newsContext}`,
+        content: `Please generate my morning briefing. Today is ${today}.${dedupContext}`,
       },
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  // Extract all text blocks (web search responses interleave tool_use blocks)
+  const text = (message.content as Array<{ type: string; text?: string }>)
+    .filter(b => b.type === "text")
+    .map(b => b.text ?? "")
+    .join("\n\n")
+    .trim();
 
   const tokensIn = message.usage?.input_tokens ?? 0;
   const tokensOut = message.usage?.output_tokens ?? 0;
@@ -352,7 +265,7 @@ ${teamAwareness}`;
 
   if (error) console.log("Supabase error:", error);
 
-  const dateStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const dateStr = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   const html = markdownToEmail(text, dateStr);
 
   await resend.emails.send({
