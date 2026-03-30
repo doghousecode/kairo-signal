@@ -192,24 +192,32 @@ function markdownToEmail(md: string, dateStr: string): string {
 }
 
 async function searchNews(query: string, days = 1): Promise<string> {
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query,
-      search_depth: "basic",
-      max_results: 5,
-      days,
-    }),
-  });
-  const data = await res.json();
-  if (!data.results) return "";
-  return data.results
-    .map((r: { title: string; url: string; content: string; published_date?: string }) =>
-      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 300)}`
-    )
-    .join("\n");
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: process.env.TAVILY_API_KEY,
+        query,
+        search_depth: "basic",
+        max_results: 5,
+        days,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const data = await res.json();
+    if (!data.results) return "";
+    return data.results
+      .map((r: { title: string; url: string; content: string; published_date?: string }) =>
+        `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 300)}`
+      )
+      .join("\n");
+  } catch {
+    return "";
+  }
 }
 
 export async function POST(request: Request) {
@@ -222,27 +230,19 @@ export async function POST(request: Request) {
 
   // Run all fetches in parallel — Tavily searches + Supabase queries together
   const [
-    breaking, aiTech, apple, arsenalNews, arsenalTable, football,
-    f1News, music, fashion, sneakers, automotive, tv, politics,
-    eidDate, f1Standings, plTable,
-    lastBriefingResult, settingsResult,
+    aiTech, apple, arsenal, football,
+    f1, entertainment, politics, fashion,
+    culturalDates, lastBriefingResult, settingsResult,
   ] = await Promise.all([
-    searchNews("breaking news today UK world", 1),
-    searchNews("AI machine learning new model release announcement", 2),
-    searchNews("Apple Inc Tim Cook news announcement", 2),
-    searchNews("Arsenal FC match tactics injury transfer news", 2),
-    searchNews(`Arsenal Premier League table standings ${monthYear}`, 7),
-    searchNews("Premier League news Tottenham Spurs manager transfer signing this week", 3),
-    searchNews(`F1 Formula 1 race result ${monthYear} grand prix`, 7),
-    searchNews("new music album single release UK charts", 3),
-    searchNews("Palace Supreme Corteiz streetwear new drop collab release", 3),
-    searchNews("sneaker release Jordan Nike Adidas new drop", 3),
-    searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
-    searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
-    searchNews("UK politics Starmer Trump US news today", 1),
-    searchNews(`Eid al-Fitr exact date ${year}`, 60),
-    searchNews(`F1 Formula 1 ${year} drivers championship standings points`, 14),
-    searchNews(`Premier League table standings top four ${monthYear}`, 7),
+    searchNews("AI machine learning model release Apple tech news today", 2),
+    searchNews("Apple Inc Tim Cook announcement news", 2),
+    searchNews("Arsenal FC Premier League table tactics news", 3),
+    searchNews("Premier League news Tottenham Spurs manager transfer", 3),
+    searchNews(`F1 Formula 1 ${year} race result standings grand prix`, 7),
+    searchNews("new music album TV series Netflix BBC streaming release UK", 3),
+    searchNews("UK politics Starmer Trump US world news today", 1),
+    searchNews("streetwear sneaker fashion drop collab release Palace Supreme Corteiz", 3),
+    searchNews(`Eid al-Fitr ${year} date Diwali Easter cultural holiday`, 60),
     supabase.from("briefings").select("content, created_at").order("created_at", { ascending: false }).limit(1).single(),
     supabase.from("settings").select("value").eq("key", "system_prompt").single(),
   ]);
@@ -258,68 +258,41 @@ export async function POST(request: Request) {
 
   const newsContext = `TODAY'S DATE: ${today}.
 
-⚠️ VERIFIED FACTS — use these for structured data. These were searched with targeted queries and should be trusted over news articles for dates and standings:
-
-## RELIGIOUS & CULTURAL DATES (current year only)
-${eidDate || "No results — do not guess dates from training data."}
-
-## F1 CHAMPIONSHIP STANDINGS (current)
-${f1Standings || "No results — do not state standings from training data."}
-
-## PREMIER LEAGUE TABLE (current)
-${plTable || "No results — do not state table positions from training data."}
-
----
-
-CRITICAL RULES for the news sections below:
+CRITICAL RULES:
 - Every article includes its [published: date]. If older than 7 days, treat as background only — do not present as current news.
 - Fashion/TV/music: only cover content confirmed within the past 7 days.
 - TIMELINES: only include facts explicitly in the search results. Do not fill gaps from training knowledge.
 - NEVER use markdown table syntax — use numbered lists or prose instead.
-- NEVER state upcoming race dates or fixture dates unless explicitly quoted in search results.
-- If VERIFIED FACTS above are empty for something, say nothing rather than guessing.
+- NEVER state upcoming race dates or fixture dates unless explicitly in the search results.
+- For religious/cultural dates, use only what appears in the CULTURAL DATES section — never guess from training data.
 ${dedupContext}
 
 ---
 
-## BREAKING NEWS
-${breaking}
-
-## AI & TECH
+## AI & TECH (includes Apple)
 ${aiTech}
 
-## APPLE
 ${apple}
 
-## ARSENAL — MATCH & TACTICAL NEWS
-${arsenalNews}
+## ARSENAL & FOOTBALL
+${arsenal}
 
-## ARSENAL — LEAGUE TABLE & STANDINGS
-${arsenalTable}
-
-## PREMIER LEAGUE & FOOTBALL NEWS
 ${football}
 
-## F1 NEWS
-${f1News}
+## F1 & SPORTS
+${f1}
 
-## MUSIC
-${music}
+## MUSIC, TV & POP CULTURE
+${entertainment}
 
 ## FASHION & STREETWEAR
 ${fashion}
 
-## SNEAKERS
-${sneakers}
-
-## AUTOMOTIVE
-${automotive}
-
-## TV & POP CULTURE
-${tv}
-
 ## POLITICS
-${politics}`;
+${politics}
+
+## CULTURAL & RELIGIOUS DATES (use these for Team Awareness section)
+${culturalDates || "No results — do not guess dates from training data."}`;
 
   const message = await client.messages.create({
     model: "claude-sonnet-4-6",
