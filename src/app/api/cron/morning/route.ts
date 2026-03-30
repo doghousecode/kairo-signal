@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const maxDuration = 120;
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET?.trim();
