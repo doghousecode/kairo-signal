@@ -32,6 +32,7 @@ DEDUPLICATION: Do not repeat stories already covered in recent briefings unless 
 - Bold key names/titles for scannability.
 - Links grouped at end of each section.
 - No fluff, no filler, no generic listicle energy. Be sharp.
+- NEVER use markdown table syntax (| col | col |) — it doesn't render. Use numbered lists or prose for standings/data.
 
 ## Sections (in order)
 
@@ -83,6 +84,7 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 - Cool Dad zone: Keep Steve current without crossing into try-hard territory. Knowing about it > pretending to be into it.
 
 ### 👟 Fashion, Streetwear & Culture
+- RECENCY IS CRITICAL: Only cover drops, collabs, and releases confirmed within the past 7 days. A collab from months or years ago is not news — skip it entirely, even if the search result mentions it.
 - Major drops, collabs, restocks: Palace, Supreme, Kith, Corteiz, ALD, Fear of God + others
 - Trend shifts, London/UK scene focus
 - Notable sneaker releases
@@ -99,6 +101,7 @@ Source priority: UK outlets first — Arseblog, The Athletic, BBC Sport, Guardia
 
 ### 📺 TV & Pop Culture
 TV (go deeper):
+- RECENCY: Only cover announcements, premieres, renewals, and deals confirmed in the past 7 days. A deal announced months ago is stale — skip it.
 - New series dropping or trending (taste: Hijack, Succession, Top Boy, prestige thriller/drama)
 - Streaming highlights: Apple TV+, Netflix, BBC
 - Podcast intel from Richard Osman's "That's Entertainment" or similar — Steve doesn't listen to podcasts but likes the anecdotal industry insights
@@ -213,8 +216,8 @@ async function searchNews(query: string, days = 1): Promise<string> {
   const data = await res.json();
   if (!data.results) return "";
   return data.results
-    .map((r: { title: string; url: string; content: string }) =>
-      `- ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
+    .map((r: { title: string; url: string; content: string; published_date?: string }) =>
+      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
     )
     .join("\n");
 }
@@ -227,20 +230,20 @@ export async function POST(request: Request) {
   const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
   const [breaking, aiTech, apple, arsenalNews, arsenalTable, football, f1, music, fashion, sneakers, automotive, tv, politics, teamAwareness] = await Promise.all([
-    searchNews("breaking news today UK world"),
-    searchNews("AI machine learning new model release announcement today"),
-    searchNews("Apple Inc Tim Cook news announcement today"),
-    searchNews("Arsenal FC match tactics injury news today"),
-    searchNews(`Arsenal Premier League table standings ${monthYear}`),
-    searchNews("Premier League news today Tottenham Spurs sacking transfer signing"),
-    searchNews(`F1 Formula 1 race result ${monthYear} grand prix`),
-    searchNews("new music album single release UK charts today"),
-    searchNews("Palace Supreme Corteiz streetwear drop collab today"),
-    searchNews("sneaker release Jordan Nike Adidas today"),
-    searchNews("Porsche Rivian Range Rover electric vehicle news today"),
-    searchNews("new TV series Netflix Apple TV BBC streaming today"),
-    searchNews("UK politics Starmer Trump US news today"),
-    searchNews(`religious holiday cultural event ${monthYear}`),
+    searchNews("breaking news today UK world", 1),
+    searchNews("AI machine learning new model release announcement", 2),
+    searchNews("Apple Inc Tim Cook news announcement", 2),
+    searchNews("Arsenal FC match tactics injury transfer news", 2),
+    searchNews(`Arsenal Premier League table standings ${monthYear}`, 7),
+    searchNews("Premier League news Tottenham Spurs manager transfer signing this week", 3),
+    searchNews(`F1 Formula 1 race result ${monthYear} grand prix standings`, 7),
+    searchNews("new music album single release UK charts", 3),
+    searchNews("Palace Supreme Corteiz streetwear new drop collab release", 3),
+    searchNews("sneaker release Jordan Nike Adidas new drop", 3),
+    searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
+    searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
+    searchNews("UK politics Starmer Trump US news today", 1),
+    searchNews(`religious holiday cultural awareness event ${monthYear}`, 14),
   ]);
 
   // Fetch yesterday's briefing for deduplication
@@ -255,15 +258,17 @@ export async function POST(request: Request) {
     ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development — if so, reference it briefly as "following yesterday's coverage of X, the latest is Y"):\n${lastBriefing.content.slice(0, 3000)}`
     : "";
 
-  const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to verify the relevance of all events below.
+  const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to judge the freshness of every article below.
 
 CRITICAL RULES:
-- Only include sports events, religious holidays, and cultural events that are confirmed CURRENT or UPCOMING based on the search results AND today's date above.
-- If a sporting tournament or event is not mentioned in the search results as happening NOW, do not include it.
-- If a religious holiday has already passed before ${today}, do not mention it as upcoming.
-- Do not rely on training data for ANY current facts, dates, schedules, or standings — verify everything against the search results above.
-- CHECK ARTICLE DATES: if a search result is from more than 7 days ago, treat it as background context only — do not present it as current news. Discard any article clearly dated before ${monthYear}.
-- Never invent upcoming fixture dates or race dates that aren't explicitly stated in the search results.
+- Every article below includes its publication date in [published: ...] brackets. Read these dates carefully.
+- If an article's published date is more than 7 days before ${today}, treat it as background only — do NOT present it as news. If you cannot confirm a story is from this week, skip it.
+- If a sporting tournament, collab, deal, or announcement is only referenced in articles older than 7 days, do not cover it as current news. It is old news.
+- Do not rely on training data for ANY current facts, standings, schedules, or events — only use what's in the search results below, verified against the published dates.
+- TIMELINES: When describing a sequence of events (e.g. manager changes), only include facts explicitly stated in the search results. Do not fill gaps from training knowledge — if a step in the timeline isn't in the results, omit it rather than invent it.
+- TABLES: Never use markdown table syntax (| col | col |). Format standings and data as a numbered list or prose instead — tables do not render well.
+- SPORTS SCHEDULES: Never state upcoming fixture or race dates unless they are explicitly quoted in the search results.
+- RELIGIOUS/CULTURAL: Only flag events that haven't happened yet relative to ${today}. If it's passed, skip it.
 ${dedupContext}
 
 Here is today's live news — use this as your sole source for current events:
@@ -325,11 +330,16 @@ ${teamAwareness}`;
   const text =
     message.content[0].type === "text" ? message.content[0].text : "";
 
+  const tokensIn = message.usage?.input_tokens ?? 0;
+  const tokensOut = message.usage?.output_tokens ?? 0;
+
   const { error } = await supabase.from("briefings").insert({
     content: text,
     topics_covered: interests
       ? interests.split(",").map((i: string) => i.trim())
       : [],
+    tokens_in: tokensIn,
+    tokens_out: tokensOut,
   });
 
   if (error) console.log("Supabase error:", error);
