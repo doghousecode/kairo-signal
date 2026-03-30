@@ -261,7 +261,9 @@ CRITICAL RULES:
 - Only include sports events, religious holidays, and cultural events that are confirmed CURRENT or UPCOMING based on the search results AND today's date above.
 - If a sporting tournament or event is not mentioned in the search results as happening NOW, do not include it.
 - If a religious holiday has already passed before ${today}, do not mention it as upcoming.
-- Do not rely on training data for current dates of recurring events (Six Nations, Ramadan, etc.) — verify against search results only.
+- Do not rely on training data for current dates of recurring events (Six Nations, Ramadan, F1 calendar, etc.) — verify against search results only.
+- CHECK ARTICLE DATES: if a search result is from more than 7 days ago, treat it as background context only — do not present it as current news. Discard any article clearly dated before ${monthYear}.
+- Never invent upcoming fixture dates or race dates that aren't explicitly stated in the search results.
 ${dedupContext}
 
 Here is today's live news — use this as your sole source for current events:
@@ -310,7 +312,7 @@ ${teamAwareness}`;
 
   const message = await client.messages.create({
     model: "claude-opus-4-5",
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [
       {
