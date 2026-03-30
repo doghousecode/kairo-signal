@@ -1,19 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 120;
-
 const client = new Anthropic();
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const SYSTEM_PROMPT = `You are Steve's personal morning briefing assistant. Deliver a 10-15 minute read covering the sections below. Always include source links and end with 3-5 specific follow-up prompts.
+export const maxDuration = 60;
+
+// The default system prompt — kept here as fallback
+const DEFAULT_SYSTEM_PROMPT = `You are Steve's personal morning briefing assistant. Deliver a 10-15 minute read covering the sections below. Always include source links and end with 3-5 specific follow-up prompts.
 
 DEDUPLICATION: Do not repeat stories already covered in recent briefings unless there's a meaningful update. If a story was covered recently but has developed, reference it briefly ("covered yesterday — the latest is Y"). Prioritise freshness.
 
@@ -154,214 +152,67 @@ End with 3-5 punchy follow-up prompts specific to today's content. Keep labels s
 - Daily cultural event countdowns
 - Anything that reads like a press release`;
 
-function markdownToEmail(md: string, dateStr: string): string {
-  const body = md
-    .replace(/^### (.+)$/gm, '<h2 style="font-family:system-ui,sans-serif;font-size:17px;font-weight:700;color:#111;margin:28px 0 8px;padding-bottom:8px;border-bottom:2px solid #f0f0f0;">$1</h2>')
-    .replace(/^## (.+)$/gm, '<h2 style="font-family:system-ui,sans-serif;font-size:20px;font-weight:800;color:#111;margin:32px 0 10px;">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 style="font-family:system-ui,sans-serif;font-size:24px;font-weight:800;color:#111;margin:0 0 16px;">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color:#3A6EE8;text-decoration:none;">$1</a>')
-    .replace(/^- (.+)$/gm, '<li style="margin-bottom:6px;font-size:15px;line-height:1.75;color:#333;">$1</li>')
-    .replace(/(<li.*<\/li>\n?)+/g, '<ul style="padding-left:20px;margin:0 0 14px;">$&</ul>')
-    .replace(/\n\n/g, '</p><p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">')
-    .replace(/^(?!<[hul])(.+)$/gm, '<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.75;color:#333;margin:0 0 12px;">$1</p>');
+export async function GET() {
+  const { data } = await supabase
+    .from("settings")
+    .select("value, updated_at")
+    .eq("key", "system_prompt")
+    .single();
 
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 24px rgba(0,0,0,0.07);">
-        <tr>
-          <td style="background:linear-gradient(135deg,#1A2B4A 0%,#2d4a8a 100%);padding:28px 40px;">
-            <div style="font-family:system-ui,sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.03em;">
-              <span style="color:#fff;">K</span><span style="color:#4A7AFF;">AI</span><span style="color:#fff;">RO</span>
-              <span style="color:rgba(255,255,255,0.4);font-size:14px;font-weight:400;margin-left:12px;">Signal</span>
-            </div>
-            <div style="color:rgba(255,255,255,0.55);font-family:system-ui,sans-serif;font-size:13px;margin-top:4px;">${dateStr}</div>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:36px 40px 48px;">
-            ${body}
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #f0f0f0;">
-            <p style="font-family:system-ui,sans-serif;font-size:12px;color:#999;margin:0;">
-              Your Kairo morning briefing · <a href="https://signal.meetkairo.ai" style="color:#3A6EE8;text-decoration:none;">signal.meetkairo.ai</a>
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
-
-async function searchNews(query: string, days = 1): Promise<string> {
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: process.env.TAVILY_API_KEY,
-      query,
-      search_depth: "advanced",
-      max_results: 8,
-      days,
-    }),
+  return NextResponse.json({
+    prompt: data?.value || DEFAULT_SYSTEM_PROMPT,
+    isCustom: !!data?.value,
+    updatedAt: data?.updated_at || null,
   });
-  const data = await res.json();
-  if (!data.results) return "";
-  return data.results
-    .map((r: { title: string; url: string; content: string; published_date?: string }) =>
-      `- [published: ${r.published_date || "date unknown"}] ${r.title}\n  ${r.url}\n  ${r.content?.slice(0, 500)}`
-    )
-    .join("\n");
 }
 
 export async function POST(request: Request) {
-  const { interests } = await request.json();
+  const { message } = await request.json();
+  if (!message?.trim()) {
+    return NextResponse.json({ error: "No message" }, { status: 400 });
+  }
 
-  const now = new Date();
-  const today = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  const monthYear = now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-
-  const [breaking, aiTech, apple, arsenalNews, arsenalTable, football, f1, music, fashion, sneakers, automotive, tv, politics, teamAwareness] = await Promise.all([
-    searchNews("breaking news today UK world", 1),
-    searchNews("AI machine learning new model release announcement", 2),
-    searchNews("Apple Inc Tim Cook news announcement", 2),
-    searchNews("Arsenal FC match tactics injury transfer news", 2),
-    searchNews(`Arsenal Premier League table standings ${monthYear}`, 7),
-    searchNews("Premier League news Tottenham Spurs manager transfer signing this week", 3),
-    searchNews(`F1 Formula 1 race result ${monthYear} grand prix standings`, 7),
-    searchNews("new music album single release UK charts", 3),
-    searchNews("Palace Supreme Corteiz streetwear new drop collab release", 3),
-    searchNews("sneaker release Jordan Nike Adidas new drop", 3),
-    searchNews("Porsche Rivian Range Rover electric vehicle news", 7),
-    searchNews("new TV series Netflix Apple TV BBC streaming premiere", 7),
-    searchNews("UK politics Starmer Trump US news today", 1),
-    searchNews(`religious holiday cultural awareness event ${monthYear}`, 14),
-  ]);
-
-  // Fetch yesterday's briefing for deduplication
-  const { data: lastBriefing } = await supabase
-    .from("briefings")
-    .select("content, created_at")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  const dedupContext = lastBriefing
-    ? `\n\nYESTERDAY'S BRIEFING (do not repeat these stories unless there is a meaningful new development — if so, reference it briefly as "following yesterday's coverage of X, the latest is Y"):\n${lastBriefing.content.slice(0, 3000)}`
-    : "";
-
-  const newsContext = `TODAY'S DATE: ${today}. This is the actual current date — use it to judge the freshness of every article below.
-
-CRITICAL RULES:
-- Every article below includes its publication date in [published: ...] brackets. Read these dates carefully.
-- If an article's published date is more than 7 days before ${today}, treat it as background only — do NOT present it as news. If you cannot confirm a story is from this week, skip it.
-- If a sporting tournament, collab, deal, or announcement is only referenced in articles older than 7 days, do not cover it as current news. It is old news.
-- Do not rely on training data for ANY current facts, standings, schedules, or events — only use what's in the search results below, verified against the published dates.
-- TIMELINES: When describing a sequence of events (e.g. manager changes), only include facts explicitly stated in the search results. Do not fill gaps from training knowledge — if a step in the timeline isn't in the results, omit it rather than invent it.
-- TABLES: Never use markdown table syntax (| col | col |). Format standings and data as a numbered list or prose instead — tables do not render well.
-- SPORTS SCHEDULES: Never state upcoming fixture or race dates unless they are explicitly quoted in the search results.
-- RELIGIOUS/CULTURAL: Only flag events that haven't happened yet relative to ${today}. If it's passed, skip it.
-${dedupContext}
-
-Here is today's live news — use this as your sole source for current events:
-
-## BREAKING NEWS
-${breaking}
-
-## AI & TECH
-${aiTech}
-
-## APPLE
-${apple}
-
-## ARSENAL — MATCH & TACTICAL NEWS
-${arsenalNews}
-
-## ARSENAL — LEAGUE TABLE & STANDINGS
-${arsenalTable}
-
-## PREMIER LEAGUE & FOOTBALL NEWS
-${football}
-
-## F1 & OTHER SPORTS
-${f1}
-
-## MUSIC
-${music}
-
-## FASHION & STREETWEAR
-${fashion}
-
-## SNEAKERS
-${sneakers}
-
-## AUTOMOTIVE
-${automotive}
-
-## TV & POP CULTURE
-${tv}
-
-## POLITICS
-${politics}
-
-## TEAM AWARENESS / CULTURAL EVENTS
-${teamAwareness}`;
-
-  // Use custom system prompt if one has been saved via /tune, otherwise fall back to default
+  // Get current prompt (custom or default)
   const { data: settingsRow } = await supabase
     .from("settings")
     .select("value")
     .eq("key", "system_prompt")
     .single();
-  const activeSystemPrompt = settingsRow?.value || SYSTEM_PROMPT;
+  const currentPrompt = settingsRow?.value || DEFAULT_SYSTEM_PROMPT;
 
-  const message = await client.messages.create({
+  const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 8192,
-    system: activeSystemPrompt,
+    system: `You are a briefing configuration assistant. Your job is to edit a morning briefing system prompt based on the user's instruction.
+
+Rules:
+- Make exactly the change requested. Keep everything else identical.
+- Return the complete updated system prompt first.
+- Then add this exact separator on its own line: ---SUMMARY---
+- Then write 1-2 sentences describing what you changed.
+- No preamble, no markdown code fences, no explanation before the prompt.`,
     messages: [
       {
         role: "user",
-        content: `morning briefing\n\n${newsContext}`,
+        content: `Here is the current briefing system prompt:\n\n${currentPrompt}\n\n---\n\nPlease make this change: ${message}`,
       },
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  const raw = response.content[0].type === "text" ? response.content[0].text : "";
+  const parts = raw.split("---SUMMARY---");
+  const updatedPrompt = parts[0].trim();
+  const summary = parts[1]?.trim() || "Prompt updated.";
 
-  const tokensIn = message.usage?.input_tokens ?? 0;
-  const tokensOut = message.usage?.output_tokens ?? 0;
+  // Save to Supabase (upsert)
+  await supabase
+    .from("settings")
+    .upsert({ key: "system_prompt", value: updatedPrompt, updated_at: new Date().toISOString() });
 
-  const { error } = await supabase.from("briefings").insert({
-    content: text,
-    topics_covered: interests
-      ? interests.split(",").map((i: string) => i.trim())
-      : [],
-    tokens_in: tokensIn,
-    tokens_out: tokensOut,
-  });
+  return NextResponse.json({ ok: true, summary });
+}
 
-  if (error) console.log("Supabase error:", error);
-
-  const dateStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-  const html = markdownToEmail(text, dateStr);
-
-  await resend.emails.send({
-    from: "Kairo Signal <signal@meetkairo.ai>",
-    to: "stephentinkler@mac.com",
-    subject: `☀️ Kairo Signal — ${dateStr}`,
-    html,
-    text,
-  });
-
-  return NextResponse.json({ briefing: text });
+export async function DELETE() {
+  await supabase.from("settings").delete().eq("key", "system_prompt");
+  return NextResponse.json({ ok: true });
 }
