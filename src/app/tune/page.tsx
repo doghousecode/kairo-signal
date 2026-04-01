@@ -76,6 +76,7 @@ export default function TunePage() {
   return (
     <main style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px", fontFamily: "system-ui" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@1,800&display=swap');
         :root { color-scheme: light dark; }
         @media (prefers-color-scheme: dark) { body { background: #0a0a0a; } }
         .msg-user { background: #3A6EE8; color: #fff; border-radius: 16px 16px 4px 16px; padding: 12px 16px; max-width: 85%; align-self: flex-end; font-size: 14px; line-height: 1.5; }
@@ -89,11 +90,11 @@ export default function TunePage() {
 
       <Link href="/" style={{ color: "#999", fontSize: 13, textDecoration: "none" }}>← back</Link>
 
-      <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", margin: "24px 0 4px" }}>
-        <span style={{ color: "#1A2B4A" }}>K</span>
-        <span style={{ color: "#4A7AFF" }}>AI</span>
-        <span style={{ color: "#1A2B4A" }}>RO</span>
-        <span style={{ color: "#999", fontSize: 16, fontWeight: 400, marginLeft: 10 }}>Tune</span>
+      <h1 style={{ fontSize: 36, fontWeight: 800, fontStyle: "oblique", fontFamily: "'Jost', system-ui", letterSpacing: "-0.01em", lineHeight: 1, margin: "24px 0 4px" }}>
+        <span style={{ color: "#2a3a6a" }}>k</span>
+        <span style={{ color: "#5b80e8" }}>ai</span>
+        <span style={{ color: "#2a3a6a" }}>ro</span>
+        <span style={{ color: "#5b80e8" }}> tune</span>
       </h1>
       <p style={{ color: "#999", fontSize: 14, marginBottom: 8 }}>
         Tell me what to change about your briefing. Changes take effect on the next generation.

@@ -20,11 +20,12 @@ export default async function ArchivePage() {
         ← back
       </Link>
 
-      <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", margin: "24px 0 4px" }}>
-        <span style={{ color: "#1A2B4A" }}>K</span>
-        <span style={{ color: "#4A7AFF" }}>AI</span>
-        <span style={{ color: "#1A2B4A" }}>RO</span>
-        <span style={{ color: "#999", fontSize: 16, fontWeight: 400, marginLeft: 10 }}>Archive</span>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@1,800&display=swap');`}</style>
+      <h1 style={{ fontSize: 36, fontWeight: 800, fontStyle: "oblique", fontFamily: "'Jost', system-ui", letterSpacing: "-0.01em", lineHeight: 1, margin: "24px 0 4px" }}>
+        <span style={{ color: "#2a3a6a" }}>k</span>
+        <span style={{ color: "#5b80e8" }}>ai</span>
+        <span style={{ color: "#2a3a6a" }}>ro</span>
+        <span style={{ color: "#5b80e8" }}> archive</span>
       </h1>
       <p style={{ color: "#999", fontSize: 14, marginBottom: 40, colorScheme: "light dark" }}>Every briefing, in order.</p>
 
