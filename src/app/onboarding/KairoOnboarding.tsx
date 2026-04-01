@@ -134,8 +134,14 @@ function getSubR(priority: number) { if (priority === 1) return SUB_R_BOOSTED; i
 function clampV(v: number) { return Math.max(-MAX_VEL, Math.min(MAX_VEL, v)); }
 
 function KairoLogo({ size = "md" }) {
-  const s = { sm: "text-xl", md: "text-2xl", lg: "text-5xl" }[size];
-  return <span className={`font-bold tracking-tight ${s}`} style={{ fontFamily: "'Outfit', sans-serif" }}><span className="text-white/90">K</span><span className="text-blue-400">AI</span><span className="text-white/90">RO</span></span>;
+  const fs = { sm: "1.25rem", md: "1.5rem", lg: "3.25rem" }[size];
+  return (
+    <span style={{ fontFamily: "'Jost', system-ui", fontWeight: 800, fontStyle: "oblique", fontSize: fs, letterSpacing: "-0.01em", lineHeight: 1 }}>
+      <span style={{ color: "#2a3a6a" }}>k</span>
+      <span style={{ color: "#5b80e8" }}>ai</span>
+      <span style={{ color: "#2a3a6a" }}>ro</span>
+    </span>
+  );
 }
 
 function initPositions(count, w, h) {
@@ -371,7 +377,7 @@ export default function KairoOnboarding() {
 
   return (
     <div className="min-h-screen text-white overflow-hidden relative" style={{ fontFamily: "'DM Sans', sans-serif", background: "linear-gradient(145deg, #080b14 0%, #0b0f1a 40%, #080c18 100%)" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700&family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700&family=Jost:ital,wght@1,800&family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
       <style>{`
         @keyframes kFadeIn { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes kPhaseIn { from { opacity: 0; transform: translateY(30px) } to { opacity: 1; transform: translateY(0) } }
@@ -391,7 +397,7 @@ export default function KairoOnboarding() {
       </div>
 
       <div className="relative z-20 flex items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #4F8EF7 0%, #6366F1 100%)", boxShadow: "0 2px 12px rgba(79,142,247,0.3)" }}><span className="text-white font-bold text-sm" style={{ fontFamily: "'Space Mono', monospace" }}>K</span></div><KairoLogo size="sm" /></div>
+        <div className="flex items-center"><KairoLogo size="sm" /></div>
         <div className="flex items-center gap-2.5">{PHASES.map((p, i) => (<div key={p} className="flex items-center gap-2.5"><div className="transition-all duration-500 rounded-full" style={{ width: i === phase ? 10 : i < phase ? 8 : 6, height: i === phase ? 10 : i < phase ? 8 : 6, background: i < phase ? "#4F8EF7" : i === phase ? "#fff" : "rgba(255,255,255,0.12)", boxShadow: i === phase ? "0 0 10px rgba(255,255,255,0.3)" : "none" }} />{i < PHASES.length - 1 && <div className="w-6 h-px transition-all duration-500" style={{ background: i < phase ? "#4F8EF7" : "rgba(255,255,255,0.06)" }} />}</div>))}</div>
       </div>
 
