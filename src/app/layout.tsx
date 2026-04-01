@@ -15,10 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kairo Signal",
   description: "Your morning briefing.",
-  icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
