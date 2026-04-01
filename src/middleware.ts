@@ -8,11 +8,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const auth = request.cookies.get('kairo-auth')
-  if (!auth || auth.value !== 'granted') {
-    const url = new URL('/password', request.url)
-    return NextResponse.redirect(url)
-  }
+  // TODO: Re-enable password requirement when ready
+  // const auth = request.cookies.get('kairo-auth')
+  // if (!auth || auth.value !== 'granted') {
+  //   const url = new URL('/password', request.url)
+  //   return NextResponse.redirect(url)
+  // }
 
   return NextResponse.next()
 }
