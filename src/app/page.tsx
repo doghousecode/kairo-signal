@@ -6,6 +6,7 @@ const navItems = [
   { href: "/archive", icon: "🗂️", label: "Archive", description: "Every briefing, in order" },
   { href: "/tune", icon: "🎛️", label: "Tune", description: "Customise your briefing through conversation" },
   { href: "/usage", icon: "📊", label: "Usage", description: "Track your API spend" },
+  { href: "/onboarding", icon: "✦", label: "Onboarding", description: "Set up your signal from scratch" },
 ];
 
 export default function Home() {
