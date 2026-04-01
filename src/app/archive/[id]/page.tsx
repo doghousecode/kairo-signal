@@ -35,13 +35,14 @@ export default async function BriefingPage({ params }: { params: Promise<{ id: s
       <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", margin: "24px 0 4px", color: "#111" }}>
         {dateStr}
       </h1>
-      <p style={{ color: "#999", fontSize: 13, marginBottom: 40 }}>
-        <Link href="/" style={{ color: "#999", textDecoration: "none" }}>
-          <span style={{ color: "#1A2B4A" }}>K</span>
-          <span style={{ color: "#4A7AFF" }}>AI</span>
-          <span style={{ color: "#1A2B4A" }}>RO</span>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@1,800&display=swap');`}</style>
+      <p style={{ marginBottom: 40 }}>
+        <Link href="/" style={{ textDecoration: "none", fontFamily: "'Jost', system-ui", fontWeight: 800, fontStyle: "oblique", fontSize: 18, letterSpacing: "-0.01em" }}>
+          <span style={{ color: "#2a3a6a" }}>k</span>
+          <span style={{ color: "#5b80e8" }}>ai</span>
+          <span style={{ color: "#2a3a6a" }}>ro</span>
+          <span style={{ color: "#5b80e8" }}> signal</span>
         </Link>
-        {" "}Signal
       </p>
 
       <div style={{ lineHeight: 1.75, fontSize: 15 }}>
