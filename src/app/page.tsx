@@ -68,6 +68,7 @@ export default function Home() {
   return (
     <main style={{ maxWidth: 640, margin: "0 auto", padding: "48px 20px 80px", fontFamily: "system-ui" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@1,800&display=swap');
         :root { color-scheme: light dark; }
         body { background: #0a0a0a; }
 
@@ -127,12 +128,12 @@ export default function Home() {
       <div style={{ marginBottom: 40 }}>
         <h1
           onClick={handleLogoClick}
-          style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", cursor: "default", userSelect: "none", margin: "0 0 4px" }}
+          style={{ fontSize: 36, fontWeight: 800, fontStyle: "oblique", fontFamily: "'Jost', system-ui", letterSpacing: "-0.01em", cursor: "default", userSelect: "none", margin: "0 0 4px", lineHeight: 1 }}
         >
-          <span style={{ color: "#c8d8f0" }}>K</span>
-          <span style={{ color: "#4A7AFF" }}>AI</span>
-          <span style={{ color: "#c8d8f0" }}>RO</span>
-          <span style={{ color: "#333", fontSize: 15, fontWeight: 400, marginLeft: 10 }}>Signal</span>
+          <span style={{ color: "#2a3a6a" }}>k</span>
+          <span style={{ color: "#5b80e8" }}>ai</span>
+          <span style={{ color: "#2a3a6a" }}>ro</span>
+          <span style={{ color: "#5b80e8" }}> signal</span>
         </h1>
         <p style={{ color: "#444", margin: 0, fontSize: 14 }}>Your morning briefing.</p>
       </div>
