@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Let the password page and its API through unconditionally
-  if (pathname.startsWith('/password') || pathname.startsWith('/api/password')) {
+  // Let API routes and the password page through unconditionally
+  if (pathname.startsWith('/api/') || pathname.startsWith('/password')) {
     return NextResponse.next()
   }
 
