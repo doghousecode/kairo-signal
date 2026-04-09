@@ -24,6 +24,7 @@ export default async function BriefingPage({ params }: { params: Promise<{ id: s
   const date = new Date(briefing.created_at);
   const dateStr = date.toLocaleDateString("en-GB", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
+    timeZone: "Europe/London",
   });
 
   return (
