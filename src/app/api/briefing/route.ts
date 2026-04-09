@@ -334,7 +334,7 @@ ${culturalDates || "No results — do not guess dates from training data."}`;
   const dateStr = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   const html = markdownToEmail(text, dateStr);
 
-  await resend.emails.send({
+  const emailResult = await resend.emails.send({
     from: "Kairo Signal <signal@meetkairo.ai>",
     to: "stephentinkler@mac.com",
     subject: `☀️ Kairo Signal — ${dateStr}`,
@@ -342,5 +342,9 @@ ${culturalDates || "No results — do not guess dates from training data."}`;
     text,
   });
 
-  return NextResponse.json({ briefing: text });
+  if (emailResult.error) {
+    console.error("Resend error:", JSON.stringify(emailResult.error));
+  }
+
+  return NextResponse.json({ briefing: text, emailError: emailResult.error ?? null });
 }
