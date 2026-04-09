@@ -56,9 +56,11 @@ export default async function ArchivePage() {
           const date = new Date(b.created_at);
           const dateStr = date.toLocaleDateString("en-GB", {
             weekday: "long", day: "numeric", month: "long", year: "numeric",
+            timeZone: "Europe/London",
           });
           const timeStr = date.toLocaleTimeString("en-GB", {
             hour: "2-digit", minute: "2-digit",
+            timeZone: "Europe/London",
           });
           const preview = b.content
             ?.replace(/#{1,3}\s/g, "")
